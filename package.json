@@ -1,0 +1,19 @@
+{
+  "name": "desktop",
+  "version": "1.0.0",
+  "private": true,
+  "main": "packages/main/dist/index.js",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -r \"npm run dev:main\" \"npm run dev:preload\" \"npm run dev:renderer\"",
+    "dev:main": "cd packages/main && npm run dev",
+    "dev:preload": "cd packages/preload && npm run dev",
+    "dev:renderer": "cd packages/renderer && npx vite",
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}

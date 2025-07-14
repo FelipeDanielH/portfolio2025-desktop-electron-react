@@ -1,0 +1,32 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Editor Desktop - Portafolio</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top-bar">
+    <button class="top-button" onclick="cambiarPagina('inicio')">Inicio</button>
+    <button class="top-button" onclick="cambiarPagina('resumen')">Resumen</button>
+    <button class="top-button" onclick="cambiarPagina('proyectos')">Proyectos</button>
+    <button class="top-button" onclick="cambiarPagina('contacto')">Contacto</button>
+  </header>
+
+  <div class="app-layout">
+    <aside class="sidebar">
+      <h3>Secciones</h3>
+      <ul id="menu-secciones">
+        <!-- Secciones dinámicas -->
+      </ul>
+    </aside>
+
+    <main class="editor-area" id="editor-area">
+      <h2>Selecciona una sección</h2>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
