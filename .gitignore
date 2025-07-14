@@ -46,3 +46,6 @@ Thumbs.db
 *.msi
 out/
 release/
+
+mockup/
+desktop.zip
