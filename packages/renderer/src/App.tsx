@@ -1,12 +1,8 @@
-import React from 'react';
-import { HeroEditor } from './components/HeroEditor';
+import AppLayout from "./components/layout/AppLayout";
 
 function App() {
   return (
-    <main className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Panel de Administración</h1>
-      <HeroEditor />
-    </main>
+    <AppLayout/>
   );
 }
 
