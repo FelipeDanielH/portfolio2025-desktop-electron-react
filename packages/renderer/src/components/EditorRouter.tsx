@@ -10,6 +10,13 @@ import ContactEditor from "../features/inicio/ContactEditor";
 import CallToActionEditor from "../features/inicio/CallToActionEditor";
 
 import ResumenEditor from "../features/resumen/ResumenEditor";
+import ExperienceList from "../features/experiencia/ExperienceList";
+import ExperienceForm from "../features/experiencia/ExperienceForm";
+import ProjectFilters from "../features/proyectos/ProjectFilters";
+import ProjectList from "../features/proyectos/ProjectList";
+import ProjectForm from "../features/proyectos/ProjectForm";
+import EducationForm from "../features/education/EducationForm";
+import EducationList from "../features/education/EducationList";
 
 
 type Props = {
@@ -54,6 +61,27 @@ export default function EditorRouter({ paginaActual, seccionActual }: Props) {
   }
   if (paginaActual === "Resumen" && seccionActual === "Editar resumen") {
     return <ResumenEditor />;
+  }
+  if (paginaActual === "Experiencia" && seccionActual === "Listar experiencias") {
+    return <ExperienceList />;
+  }
+  if (paginaActual === "Experiencia" && seccionActual === "Agregar experiencia") {
+    return <ExperienceForm mode="crear" />;
+  }
+  if (paginaActual === "Proyectos" && seccionActual === "Filtros") {
+    return <ProjectFilters />;
+  }
+  if (paginaActual === "Proyectos" && seccionActual === "Listado proyectos") {
+    return <ProjectList />;
+  }
+  if (paginaActual === "Proyectos" && seccionActual === "Agregar proyecto") {
+    return <ProjectForm mode="crear" />;
+  }
+  if (paginaActual === "Formación" && seccionActual === "Agregar formación") {
+    return <EducationForm />;
+  }
+  if (paginaActual === "Formación" && seccionActual === "Listado de formaciones") {
+    return <EducationList />;
   }
   return (
     <p className="text-gray-500 italic">

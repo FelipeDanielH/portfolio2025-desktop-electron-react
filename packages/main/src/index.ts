@@ -23,7 +23,7 @@ const createWindow = () => {
   });
 
   win.loadURL('http://localhost:5173');
-  // win.webContents.openDevTools(); // Solo para desarrollo
+  win.webContents.openDevTools(); // Solo para desarrollo
 };
 
 app.whenReady().then(() => {

@@ -26,6 +26,19 @@ const seccionesPorPagina: Record<string, string[]> = {
     "Agregar tecnología",
     "Categorías"
   ],
+  Experiencia: [
+    "Listar experiencias",
+    "Agregar experiencia"
+  ],
+  Proyectos: [
+    "Filtros",
+    "Listado proyectos",
+    "Agregar proyecto"
+  ],
+  Formación: [
+    "Listado de formaciones",
+    "Agregar formación"
+  ],
 };
 
 export default function Sidebar({ paginaActual, seccionActual, setSeccionActual }: SidebarProps) {
