@@ -1,12 +1,16 @@
 import HeroEditor from "../features/inicio/HeroEditor";
 import AboutEditor from "../features/inicio/AboutEditor";
 import SkillsEditor from "../features/inicio/SkillsEditor";
+import CategoriesEditor from "../features/habilidades/CategoriesEditor";
 import ExperienceEditor from "../features/inicio/ExperienceEditor";
 import ProjectsEditor from "../features/inicio/ProjectsEditor";
 import EducationEditor from "../features/inicio/EducationEditor";
 import CertificationsEditor from "../features/inicio/CertificationsEditor";
 import ContactEditor from "../features/inicio/ContactEditor";
 import CallToActionEditor from "../features/inicio/CallToActionEditor";
+
+import ResumenEditor from "../features/resumen/ResumenEditor";
+
 
 type Props = {
   paginaActual: string;
@@ -34,7 +38,6 @@ export default function EditorRouter({ paginaActual, seccionActual }: Props) {
         return <ContactEditor />;
       case "Llamado a la acción":
         return <CallToActionEditor />;
-
       default:
         return (
           <p className="text-gray-500 italic">
@@ -43,7 +46,15 @@ export default function EditorRouter({ paginaActual, seccionActual }: Props) {
         );
     }
   }
-
+  if (paginaActual === "Habilidades" && seccionActual === "Agregar tecnología") {
+    return <SkillsEditor />;
+  }
+  if (paginaActual === "Habilidades" && seccionActual === "Categorías") {
+    return <CategoriesEditor />;
+  }
+  if (paginaActual === "Resumen" && seccionActual === "Editar resumen") {
+    return <ResumenEditor />;
+  }
   return (
     <p className="text-gray-500 italic">
       Esta página aún no tiene editores registrados.

@@ -5,7 +5,7 @@ type TopBarProps = {
   setPaginaActual: (pagina: string) => void;
 };
 
-const paginas = ["Inicio", "Resumen", "Proyectos", "Contacto"];
+const paginas = ["Inicio", "Resumen", "Habilidades", "Proyectos", "Contacto"];
 
 export default function TopBar({ paginaActual, setPaginaActual }: TopBarProps) {
   return (

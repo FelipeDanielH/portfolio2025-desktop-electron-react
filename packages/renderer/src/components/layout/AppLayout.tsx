@@ -7,9 +7,23 @@ export default function AppLayout() {
   const [paginaActual, setPaginaActual] = useState("Inicio");
   const [seccionActual, setSeccionActual] = useState("Hero");
 
+  // Sincronizar seccionActual con paginaActual
+  const handleSetPaginaActual = (pagina: string) => {
+    setPaginaActual(pagina);
+    if (pagina === "Inicio") {
+      setSeccionActual("Hero");
+    } else if (pagina === "Resumen") {
+      setSeccionActual("Editar resumen");
+    } else if (pagina === "Habilidades") {
+      setSeccionActual("Editar habilidades");
+    } else {
+      setSeccionActual("");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
-      <TopBar paginaActual={paginaActual} setPaginaActual={setPaginaActual} />
+      <TopBar paginaActual={paginaActual} setPaginaActual={handleSetPaginaActual} />
 
       <div className="flex">
         <Sidebar

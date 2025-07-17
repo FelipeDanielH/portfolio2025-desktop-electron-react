@@ -19,6 +19,13 @@ const seccionesPorPagina: Record<string, string[]> = {
     "Contacto",
     "Llamado a la acción",
   ],
+  Resumen: [
+    "Editar resumen"
+  ],
+  Habilidades: [
+    "Agregar tecnología",
+    "Categorías"
+  ],
 };
 
 export default function Sidebar({ paginaActual, seccionActual, setSeccionActual }: SidebarProps) {
