@@ -11,33 +11,29 @@ const seccionesPorPagina: Record<string, string[]> = {
   Inicio: [
     "Hero",
     "Sobre mí",
-    "Habilidades técnicas",
+    "Habilidades",
     "Experiencia profesional",
     "Proyectos",
-    "Formación académica",
-    "Certificaciones",
+    "Formación",
     "Contacto",
-    "Llamado a la acción",
+    "Llamada a la acción"
   ],
   Resumen: [
     "Editar resumen"
   ],
   Habilidades: [
-    "Agregar tecnología",
-    "Categorías"
+    "Gestionar Habilidades",
+    "Gestionar Categorías"
   ],
   Experiencia: [
-    "Listar experiencias",
-    "Agregar experiencia"
+    "Gestionar Experiencia"
   ],
   Proyectos: [
-    "Filtros",
-    "Listado proyectos",
-    "Agregar proyecto"
+    "Gestionar Proyectos",
+    "Filtros"
   ],
   Formación: [
-    "Listado de formaciones",
-    "Agregar formación"
+    "Gestionar Formación"
   ],
 };
 

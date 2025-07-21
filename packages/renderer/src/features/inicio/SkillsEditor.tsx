@@ -1,229 +1,270 @@
-import { useState } from "react";
-import InputField from "../../components/ui/InputField";
-
-interface Concepto {
-  nombre: string;
-  aprendido: boolean;
-  _id: string;
-}
-
-interface Skill {
-  id?: string;
-  categoria: string;
-  tecnologia: string;
-  nivel: string;
-  puntuacion: number;
-  descripcion: string;
-  conceptos: Concepto[];
-  ordenTecnologia?: number;
-}
-
-const niveles = ["Básico", "Intermedio", "Avanzado", "Experto"];
-
-// Simulación de categorías (esto luego vendrá de CategoriesEditor o un hook global)
-const categoriasDemo = [
-  { id: '1', nombre: 'Frontend' },
-  { id: '2', nombre: 'Backend' },
-  { id: '3', nombre: 'Lenguajes' },
-];
+import { useState, useCallback, useMemo, useEffect } from "react";
+import { useSkills } from '../hooks/useSkills';
+import { useCategories } from '../hooks/useCategories';
+import SkillForm from '../habilidades/SkillForm';
+import { DraggableList } from '../../components/ui/DraggableList';
+import { SkillCard } from '../../components/ui/SkillCard';
+import LoadingSpinner from "../../components/ui/LoadingSpinner";
+import ErrorMessage from "../../components/ui/ErrorMessage";
+import SuccessMessage from "../../components/ui/SuccessMessage";
+import type { Skill } from '../../types/skills.types';
 
 export default function SkillsEditor() {
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [editando, setEditando] = useState<number | null>(null);
+  const {
+    skills,
+    loading: skillsLoading,
+    error: skillsError,
+    createSkill,
+    updateSkill,
+    deleteSkill,
+    loadSkills,
+    clearError: clearSkillsError
+  } = useSkills();
 
-  // CRUD de skills
-  const agregarSkill = () => {
-    setSkills((prev) => ([
-      ...prev,
-      {
-        categoria: "",
-        tecnologia: "",
-        nivel: "Básico",
-        puntuacion: 1,
-        descripcion: "",
-        conceptos: [],
-        ordenTecnologia: 1,
-      },
-    ]));
-    setEditando(skills.length);
+  const {
+    categorias,
+    loading: categoriesLoading,
+    error: categoriesError,
+    clearError: clearCategoriesError
+  } = useCategories();
+
+  const [showForm, setShowForm] = useState(false);
+  const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [hayCambiosPendientes, setHayCambiosPendientes] = useState(false);
+  const [guardandoOrden, setGuardandoOrden] = useState(false);
+  const [skillsLocal, setSkillsLocal] = useState<Skill[]>([]);
+
+  const handleCreateSkill = async (data: Omit<Skill, '_id'>) => {
+    try {
+      await createSkill(data);
+      setShowForm(false);
+      setSuccessMessage('Habilidad creada correctamente');
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (error) {
+      // Error ya manejado por el hook
+    }
   };
 
-  const eliminarSkill = (idx: number) => {
-    setSkills((prev) => prev.filter((_, i) => i !== idx));
-    if (editando === idx) setEditando(null);
+  const handleUpdateSkill = async (data: Omit<Skill, '_id'>) => {
+    try {
+      if (editingSkill) {
+        await updateSkill(editingSkill._id!, data);
+        setEditingSkill(null);
+        setShowForm(false); // Cerrar el formulario después de actualizar
+        setSuccessMessage('Habilidad actualizada correctamente');
+        setTimeout(() => setSuccessMessage(null), 3000);
+      }
+    } catch (error) {
+      // Error ya manejado por el hook
+    }
   };
 
-  const actualizarCampo = <K extends keyof Skill>(idx: number, campo: K, valor: Skill[K]) => {
-    setSkills((prev) => {
-      const copia = prev.map((s, i) => i === idx ? { ...s, [campo]: valor } : s);
-      return copia;
-    });
+  const handleDeleteSkill = async (id: string) => {
+    if (window.confirm("¿Seguro que deseas eliminar esta habilidad?")) {
+      try {
+        await deleteSkill(id);
+        setSuccessMessage('Habilidad eliminada correctamente');
+        setTimeout(() => setSuccessMessage(null), 3000);
+      } catch (error) {
+        // Error ya manejado por el hook
+      }
+    }
   };
 
-  // CRUD de conceptos
-  const agregarConcepto = (idx: number) => {
-    const uniqueId = Date.now().toString(36) + Math.random().toString(36).slice(2);
-    setSkills((prev) => {
-      console.log('Agregando concepto a skill', idx, 'id generado:', uniqueId);
-      return prev.map((s, i) =>
-        i === idx
-          ? { ...s, conceptos: [...s.conceptos, { nombre: "", aprendido: false, _id: uniqueId }] }
-          : s
-      );
-    });
+  const handleEditSkill = (skill: Skill) => {
+    setEditingSkill(skill);
+    setShowForm(true);
   };
 
-  const actualizarConcepto = (idx: number, cidx: number, campo: keyof Concepto, valor: any) => {
-    setSkills((prev) => {
-      return prev.map((s, i) =>
-        i === idx
-          ? {
-              ...s,
-              conceptos: s.conceptos.map((c, j) =>
-                j === cidx ? { ...c, [campo]: valor } : c
-              ),
-            }
-          : s
-      );
-    });
+  const handleCancelForm = () => {
+    setShowForm(false);
+    setEditingSkill(null);
   };
 
-  const eliminarConcepto = (idx: number, cidx: number) => {
-    setSkills((prev) => {
-      console.log('Eliminando concepto', cidx, 'de skill', idx);
-      return prev.map((s, i) =>
-        i === idx
-          ? { ...s, conceptos: s.conceptos.filter((_, j) => j !== cidx) }
-          : s
-      );
-    });
+  // Ordenar habilidades por campo orden
+  const skillsOrdenadas = useMemo(() => {
+    // Usar skills locales si hay cambios pendientes, sino usar skills del hook
+    const skillsToUse = hayCambiosPendientes ? skillsLocal : skills;
+    
+    const sorted = [...skillsToUse].sort((a, b) => (a.orden || 1) - (b.orden || 1));
+    
+    return sorted;
+  }, [skills, skillsLocal, hayCambiosPendientes]);
+
+  // Sincronizar skills locales con las del hook
+  useEffect(() => {
+    setSkillsLocal(skills);
+  }, [skills]);
+
+  // Función para actualizar el orden visual (sin tocar BD)
+  const actualizarOrdenVisual = useCallback((nuevasSkills: any[]) => {
+    // ACTUALIZAR ESTADO LOCAL INMEDIATAMENTE
+    setSkillsLocal(nuevasSkills);
+    setHayCambiosPendientes(true);
+  }, [skills]);
+
+  // Función para guardar cambios en la BD
+  const guardarCambios = useCallback(async () => {
+    setGuardandoOrden(true);
+    try {
+      // Actualizar cada habilidad con su nuevo orden SECUENCIALMENTE
+      for (const skill of skillsLocal) {
+        if (skill._id) {
+          await window.electronAPI.skills.update(skill._id, { 
+            tecnologia: skill.tecnologia,
+            categoria_id: skill.categoria_id,
+            nivel: skill.nivel,
+            puntuacion: skill.puntuacion,
+            descripcion: skill.descripcion,
+            conceptos: skill.conceptos,
+            orden: skill.orden
+          });
+        }
+      }
+      
+      // Recargar las habilidades para sincronizar con la BD
+      await loadSkills();
+      
+      setHayCambiosPendientes(false);
+      setSuccessMessage('Orden de habilidades guardado correctamente');
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (error) {
+      console.error('❌ Error al guardar cambios:', error);
+      // El error se maneja a través del hook useSkills
+      console.error('Error al guardar los cambios en la base de datos');
+    } finally {
+      setGuardandoOrden(false);
+    }
+  }, [skillsLocal, loadSkills]);
+
+  const getCategoriaName = (categoriaId: string) => {
+    const categoria = categorias.find(c => c._id === categoriaId);
+    return categoria?.nombre || 'Sin categoría';
   };
 
-  // Ordenar skills para visualización
-  const skillsOrdenadas = [...skills].sort((a, b) => {
-    return (a.ordenTecnologia ?? 0) - (b.ordenTecnologia ?? 0);
-  });
+  const loading = skillsLoading || categoriesLoading;
+  const error = skillsError || categoriesError;
+
+  // Renderizar cada habilidad
+  const renderSkill = useCallback((skill: any, isDragging: boolean) => (
+    <SkillCard
+      skill={skill}
+      isDragging={isDragging}
+      onEdit={handleEditSkill}
+      onDelete={handleDeleteSkill}
+      getCategoriaName={getCategoriaName}
+    />
+  ), [handleEditSkill, handleDeleteSkill, getCategoriaName]);
+
+  const clearError = () => {
+    if (skillsError) clearSkillsError();
+    if (categoriesError) clearCategoriesError();
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <h2 className="text-xl font-bold">Gestionar Habilidades</h2>
+        <LoadingSpinner text="Cargando habilidades..." />
+      </div>
+    );
+  }
+
+  if (showForm) {
+    return (
+      <div className="space-y-6">
+
+        
+        <SkillForm
+          skill={editingSkill}
+          onSubmit={editingSkill ? handleUpdateSkill : handleCreateSkill}
+          onCancel={handleCancelForm}
+          loading={loading}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <button
-        onClick={agregarSkill}
-        className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
-      >
-        Agregar tecnología
-      </button>
-
-      {skillsOrdenadas.length === 0 && (
-        <div className="text-center text-gray-500 py-8">
-          No hay tecnologías registradas.
-        </div>
+      <h2 className="text-xl font-bold">Gestionar Habilidades</h2>
+      
+      {error && (
+        <ErrorMessage 
+          message={error} 
+          onDismiss={clearError}
+        />
       )}
 
-      {skillsOrdenadas.map((skill, idx) => (
-        <div key={idx} className="border p-4 rounded-md bg-gray-50 space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="font-semibold text-lg">
-              {skill.tecnologia || <span className="italic text-gray-400">Nueva tecnología</span>}
-            </h3>
-            <button
-              onClick={() => eliminarSkill(idx)}
-              className="text-red-500 hover:underline text-sm"
-            >
-              Eliminar
-            </button>
-          </div>
+      {successMessage && (
+        <SuccessMessage 
+          message={successMessage} 
+          onDismiss={() => setSuccessMessage(null)}
+        />
+      )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block font-medium text-sm mb-1">Categoría</label>
-              <select
-                className="w-full border border-gray-300 rounded-md p-2"
-                value={skill.categoria}
-                onChange={e => actualizarCampo(idx, "categoria", e.target.value)}
-              >
-                <option value="">Selecciona una categoría</option>
-                {categoriasDemo.map(cat => (
-                  <option key={cat.id} value={cat.nombre}>{cat.nombre}</option>
-                ))}
-              </select>
-            </div>
-            <InputField
-              label="Tecnología"
-              value={skill.tecnologia}
-              onChange={e => actualizarCampo(idx, "tecnologia", e.target.value)}
-              placeholder="Ej: React"
-            />
-            <div>
-              <label className="block font-medium text-sm mb-1">Nivel</label>
-              <select
-                className="w-full border border-gray-300 rounded-md p-2"
-                value={skill.nivel}
-                onChange={e => actualizarCampo(idx, "nivel", e.target.value)}
-              >
-                {niveles.map(nivel => (
-                  <option key={nivel} value={nivel}>{nivel}</option>
-                ))}
-              </select>
-            </div>
-            <InputField
-              label="Puntuación (1-10)"
-              type="number"
-              min={1}
-              max={10}
-              value={skill.puntuacion}
-              onChange={e => actualizarCampo(idx, "puntuacion", Number(e.target.value))}
-            />
-            <InputField
-              label="Orden de tecnología"
-              type="number"
-              min={1}
-              value={skill.ordenTecnologia ?? 1}
-              onChange={e => actualizarCampo(idx, "ordenTecnologia", Number(e.target.value))}
-            />
-          </div>
+      <div className="flex items-center justify-between mb-4">
+      <button
+          onClick={() => setShowForm(true)}
+        className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+      >
+          Agregar nueva habilidad
+      </button>
 
-          {/* Conceptos asociados */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="font-medium text-sm">Conceptos asociados</span>
-              <button
-                onClick={() => agregarConcepto(idx)}
-                className="text-indigo-600 text-sm hover:underline"
-              >
-                + Agregar concepto
-              </button>
-            </div>
-            {skill.conceptos.length === 0 && (
-              <div className="text-gray-400 text-sm">No hay conceptos.</div>
+        {hayCambiosPendientes && (
+          <button
+            onClick={guardarCambios}
+            disabled={guardandoOrden}
+            className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"
+          >
+            {guardandoOrden ? (
+              <>
+                <span className="animate-spin">💾</span>
+                Guardando...
+              </>
+            ) : (
+              <>
+                💾 Guardar Cambios
+              </>
             )}
-            {skill.conceptos.map((concepto, cidx) => (
-              <div key={concepto._id} className="flex gap-2 items-center">
-                <InputField
-                  label=""
-                  placeholder="Nombre del concepto"
-                  value={concepto.nombre}
-                  onChange={e => actualizarConcepto(idx, cidx, "nombre", e.target.value)}
-                />
-                <label className="flex items-center gap-1 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={concepto.aprendido}
-                    onChange={e => actualizarConcepto(idx, cidx, "aprendido", e.target.checked)}
-                  />
-                  Aprendido
-                </label>
-                <button
-                  type="button"
-                  onClick={() => eliminarConcepto(idx, cidx)}
-                  className="text-red-500 hover:text-red-700 text-sm"
-                >
-                  Eliminar
-                </button>
-              </div>
-            ))}
-          </div>
+          </button>
+        )}
+      </div>
+
+      {skills.length === 0 ? (
+        <div className="text-center text-gray-500 py-8">
+          No hay habilidades registradas.
         </div>
-      ))}
+      ) : (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-lg">Habilidades Existentes</h3>
+            <div className="text-sm text-gray-500">
+              {skillsOrdenadas.length} habilidades
+            </div>
+          </div>
+
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>💡 Tip:</strong> Arrastra y suelta las habilidades para reordenarlas. 
+              Los cambios se aplicarán visualmente inmediatamente. 
+              {hayCambiosPendientes && (
+                <span className="font-semibold text-green-700"> Haz clic en "Guardar Cambios" para persistir en la base de datos.</span>
+              )}
+            </p>
+          </div>
+
+          <DraggableList
+            items={skillsOrdenadas}
+            onReorder={actualizarOrdenVisual}
+            renderItem={renderSkill}
+            className="space-y-3"
+            scrollable={true}
+            maxHeight="600px"
+          />
+        </div>
+      )}
     </div>
   );
 }

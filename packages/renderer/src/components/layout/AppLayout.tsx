@@ -15,11 +15,11 @@ export default function AppLayout() {
     } else if (pagina === "Resumen") {
       setSeccionActual("Editar resumen");
     } else if (pagina === "Habilidades") {
-      setSeccionActual("Agregar tecnología");
+      setSeccionActual("Gestionar Habilidades");
     } else if (pagina === "Experiencia") {
-      setSeccionActual("Listar experiencias");
+      setSeccionActual("Gestionar Experiencia");
     } else if (pagina === "Proyectos") {
-      setSeccionActual("Listado proyectos");
+      setSeccionActual("Gestionar Proyectos");
     } else {
       setSeccionActual("");
     }

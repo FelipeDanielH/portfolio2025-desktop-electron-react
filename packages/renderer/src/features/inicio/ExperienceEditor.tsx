@@ -14,8 +14,6 @@ interface Experiencia {
 
 export default function ExperienceEditor() {
   const [experiencias, setExperiencias] = useState<Experiencia[]>([]);
-  const [nuevaTecnologia, setNuevaTecnologia] = useState("");
-  const [editandoIndex, setEditandoIndex] = useState<number | null>(null);
 
   const agregarExperiencia = () => {
     setExperiencias([
@@ -27,19 +25,17 @@ export default function ExperienceEditor() {
   const actualizarCampo = (
     index: number,
     campo: keyof Experiencia,
-    valor: string
+    valor: string | string[]
   ) => {
     const copia = [...experiencias];
-    (copia[index][campo] as string) = valor;
+    if (campo === "tecnologias") {
+      copia[index][campo] = valor as string[];
+    } else {
+      (copia[index][campo] as string) = valor as string;
+    }
     setExperiencias(copia);
   };
   
-  const eliminarTecnologia = (index: number, tech: string) => {
-    const copia = [...experiencias];
-    copia[index].tecnologias = copia[index].tecnologias.filter((t) => t !== tech);
-    setExperiencias(copia);
-  };
-
   const eliminarExperiencia = (index: number) => {
     setExperiencias(experiencias.filter((_, i) => i !== index));
   };
@@ -87,18 +83,10 @@ export default function ExperienceEditor() {
           />
 
           <TagInput
-            tags={exp.tecnologias}
-            onAdd={(tag) => {
-              const copia = [...experiencias];
-              copia[idx].tecnologias.push(tag);
-              setExperiencias(copia);
-            }}
-            onRemove={(tag) => eliminarTecnologia(idx, tag)}
-            inputValue={editandoIndex === idx ? nuevaTecnologia : ""}
-            setInputValue={(val) => {
-              setEditandoIndex(idx);
-              setNuevaTecnologia(val);
-            }}
+            label="Tecnologías"
+            value={exp.tecnologias}
+            onChange={nuevasTecnos => actualizarCampo(idx, "tecnologias", nuevasTecnos)}
+            suggestions={[]}
             placeholder="Ej: React, MongoDB"
           />
         </FormSection>

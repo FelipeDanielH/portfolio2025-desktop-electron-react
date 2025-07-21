@@ -1,23 +1,19 @@
-import HeroEditor from "../features/inicio/HeroEditor";
-import AboutEditor from "../features/inicio/AboutEditor";
-import SkillsEditor from "../features/inicio/SkillsEditor";
-import CategoriesEditor from "../features/habilidades/CategoriesEditor";
-import ExperienceEditor from "../features/inicio/ExperienceEditor";
-import ProjectsEditor from "../features/inicio/ProjectsEditor";
-import EducationEditor from "../features/inicio/EducationEditor";
-import CertificationsEditor from "../features/inicio/CertificationsEditor";
-import ContactEditor from "../features/inicio/ContactEditor";
-import CallToActionEditor from "../features/inicio/CallToActionEditor";
+import HeroInicioEditor from "../features/inicio/HeroInicioEditor";
+import AboutInicioList from "../features/inicio/AboutInicioList";
+import SkillsInicioList from "../features/inicio/SkillsInicioList";
+import ExperienceInicioList from "../features/inicio/ExperienceInicioList";
+import ProjectsInicioList from "../features/inicio/ProjectsInicioList";
+import EducationInicioList from "../features/inicio/EducationInicioList";
+import ContactInicioEditor from "../features/inicio/ContactInicioEditor";
+import CallToActionInicioEditor from "../features/inicio/CallToActionInicioEditor";
 
-import ResumenEditor from "../features/resumen/ResumenEditor";
-import ExperienceList from "../features/experiencia/ExperienceList";
-import ExperienceForm from "../features/experiencia/ExperienceForm";
+import { ResumenEditor } from "../features/resumen/ResumenEditor";
+import { ExperienceEditor } from "../features/experiencia/ExperienceEditor";
 import ProjectFilters from "../features/proyectos/ProjectFilters";
-import ProjectList from "../features/proyectos/ProjectList";
-import ProjectForm from "../features/proyectos/ProjectForm";
-import EducationForm from "../features/education/EducationForm";
-import EducationList from "../features/education/EducationList";
-
+import ProjectEditor from "../features/proyectos/ProjectEditor";
+import { EducationEditor } from "../features/education/EducationEditor";
+import SkillsList from "../features/habilidades/SkillsList";
+import CategoriesEditor from "../features/habilidades/CategoriesEditor";
 
 type Props = {
   paginaActual: string;
@@ -28,23 +24,21 @@ export default function EditorRouter({ paginaActual, seccionActual }: Props) {
   if (paginaActual === "Inicio") {
     switch (seccionActual) {
       case "Hero":
-        return <HeroEditor />;
+        return <HeroInicioEditor />;
       case "Sobre mí":
-        return <AboutEditor />;
-      case "Habilidades técnicas":
-        return <SkillsEditor />;
+        return <AboutInicioList />;
+      case "Habilidades":
+        return <SkillsInicioList />;
       case "Experiencia profesional":
-        return <ExperienceEditor />;
+        return <ExperienceInicioList />;
       case "Proyectos":
-        return <ProjectsEditor />;
-      case "Formación académica":
-        return <EducationEditor />;
-      case "Certificaciones":
-        return <CertificationsEditor />;
+        return <ProjectsInicioList />;
+      case "Formación":
+        return <EducationInicioList />;
       case "Contacto":
-        return <ContactEditor />;
-      case "Llamado a la acción":
-        return <CallToActionEditor />;
+        return <ContactInicioEditor />;
+      case "Llamada a la acción":
+        return <CallToActionInicioEditor />;
       default:
         return (
           <p className="text-gray-500 italic">
@@ -53,35 +47,34 @@ export default function EditorRouter({ paginaActual, seccionActual }: Props) {
         );
     }
   }
-  if (paginaActual === "Habilidades" && seccionActual === "Agregar tecnología") {
-    return <SkillsEditor />;
-  }
-  if (paginaActual === "Habilidades" && seccionActual === "Categorías") {
-    return <CategoriesEditor />;
+  if (paginaActual === "Habilidades") {
+    switch (seccionActual) {
+      case "Gestionar Habilidades":
+        return <SkillsList />;
+      case "Gestionar Categorías":
+        return <CategoriesEditor />;
+      default:
+        return (
+          <p className="text-gray-500 italic">
+            Esta sección aún no tiene editor implementado.
+          </p>
+        );
+    }
   }
   if (paginaActual === "Resumen" && seccionActual === "Editar resumen") {
     return <ResumenEditor />;
   }
-  if (paginaActual === "Experiencia" && seccionActual === "Listar experiencias") {
-    return <ExperienceList />;
-  }
-  if (paginaActual === "Experiencia" && seccionActual === "Agregar experiencia") {
-    return <ExperienceForm mode="crear" />;
+  if (paginaActual === "Experiencia" && seccionActual === "Gestionar Experiencia") {
+    return <ExperienceEditor />;
   }
   if (paginaActual === "Proyectos" && seccionActual === "Filtros") {
     return <ProjectFilters />;
   }
-  if (paginaActual === "Proyectos" && seccionActual === "Listado proyectos") {
-    return <ProjectList />;
+  if (paginaActual === "Proyectos" && seccionActual === "Gestionar Proyectos") {
+    return <ProjectEditor />;
   }
-  if (paginaActual === "Proyectos" && seccionActual === "Agregar proyecto") {
-    return <ProjectForm mode="crear" />;
-  }
-  if (paginaActual === "Formación" && seccionActual === "Agregar formación") {
-    return <EducationForm />;
-  }
-  if (paginaActual === "Formación" && seccionActual === "Listado de formaciones") {
-    return <EducationList />;
+  if (paginaActual === "Formación" && seccionActual === "Gestionar Formación") {
+    return <EducationEditor />;
   }
   return (
     <p className="text-gray-500 italic">

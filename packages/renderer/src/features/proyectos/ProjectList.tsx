@@ -1,77 +1,9 @@
 import { useState } from "react";
-
-interface Project {
-  _id: string;
-  nombre: string;
-  descripcion: string;
-  tecnologias: string[];
-  roles?: string[];
-  frameworks?: string[];
-  lenguajes?: string[];
-  herramientas?: string[];
-  estado: "en desarrollo" | "completado" | "abandonado";
-  año: number;
-  imagen?: string;
-  links: {
-    demo?: string;
-    frontend?: string;
-    backend?: string;
-    github?: string;
-    otros?: { titulo: string; url: string }[];
-  };
-}
-
-interface Tech {
-  _id: string;
-  tipo: "lenguaje" | "framework" | "rol" | "herramienta";
-  nombre: string;
-  icono?: string;
-}
-
-const mockTechs: Tech[] = [
-  { _id: "1", tipo: "framework", nombre: "React" },
-  { _id: "2", tipo: "framework", nombre: "Vue" },
-  { _id: "3", tipo: "lenguaje", nombre: "JavaScript" },
-  { _id: "4", tipo: "lenguaje", nombre: "TypeScript" },
-  { _id: "5", tipo: "rol", nombre: "Frontend" },
-  { _id: "6", tipo: "herramienta", nombre: "Docker" }
-];
-
-const mockProyectos: Project[] = [
-  {
-    _id: "1",
-    nombre: "Portfolio Web",
-    descripcion: "Sitio personal con Next.js y Tailwind.",
-    tecnologias: ["React", "TypeScript", "Tailwind"],
-    roles: ["Frontend"],
-    frameworks: ["Next.js"],
-    lenguajes: ["TypeScript"],
-    herramientas: ["Vercel", "Tailwind"],
-    estado: "completado",
-    año: 2024,
-    imagen: "https://miportfolio.com/img/portfolio.png",
-    links: {
-      demo: "https://portfolio.vercel.app",
-      github: "https://github.com/miusuario/portfolio"
-    }
-  },
-  {
-    _id: "2",
-    nombre: "API de Finanzas",
-    descripcion: "API REST para gestión de gastos.",
-    tecnologias: ["Python", "FastAPI", "Docker"],
-    roles: ["Backend"],
-    frameworks: ["FastAPI"],
-    lenguajes: ["Python"],
-    herramientas: ["Docker"],
-    estado: "en desarrollo",
-    año: 2023,
-    imagen: "https://miportfolio.com/img/finanzas.png",
-    links: {
-      github: "https://github.com/miusuario/finanzas-api"
-    }
-  }
-];
+import type { Project } from "../../types/projects.types";
+import { useProjects } from "../hooks/useProjects";
+import { useTechs } from "../hooks/useTechs";
+import LoadingSpinner from "../../components/ui/LoadingSpinner";
+import ErrorMessage from "../../components/ui/ErrorMessage";
 
 const tiposFiltro = [
   { value: "lenguaje", label: "Lenguaje" },
@@ -90,29 +22,62 @@ const filtroKeyMap: Record<TipoFiltro, keyof Project> = {
 };
 
 export default function ProjectList() {
-  const [proyectos, setProyectos] = useState<Project[]>(mockProyectos);
-  const [techs] = useState<Tech[]>(mockTechs);
+  const { projects, loading: projectsLoading, error: projectsError, delete: deleteProject, clearMessages: clearProjectsMessages } = useProjects();
+  const { techs, loading: techsLoading, error: techsError, clearMessages: clearTechsMessages } = useTechs();
+  
   const [tipoFiltro, setTipoFiltro] = useState<TipoFiltro>("lenguaje");
   const [valorFiltro, setValorFiltro] = useState("");
 
   const techsPorTipo = techs.filter(t => t.tipo === tipoFiltro);
 
   const proyectosFiltrados = valorFiltro
-    ? proyectos.filter(p => Array.isArray(p[filtroKeyMap[tipoFiltro]]) && (p[filtroKeyMap[tipoFiltro]] as string[]).includes(valorFiltro))
-    : proyectos;
+    ? projects.filter(p => Array.isArray(p[filtroKeyMap[tipoFiltro]]) && (p[filtroKeyMap[tipoFiltro]] as string[]).includes(valorFiltro))
+    : projects;
+
+  const handleDeleteProject = async (id: string) => {
+    if (confirm('¿Estás seguro de que quieres eliminar este proyecto?')) {
+      await deleteProject(id);
+    }
+  };
+
+  const loading = projectsLoading || techsLoading;
+  const error = projectsError || techsError;
+
+  const clearError = () => {
+    if (projectsError) clearProjectsMessages();
+    if (techsError) clearTechsMessages();
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <h2 className="text-xl font-bold">Listado de proyectos</h2>
+        <LoadingSpinner text="Cargando proyectos..." />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-bold">Listado de proyectos</h2>
+      
+      {error && (
+        <ErrorMessage 
+          message={error} 
+          onDismiss={clearError}
+        />
+      )}
+
       <div className="flex gap-2 mb-4">
         <select className="border p-2 rounded-md" value={tipoFiltro} onChange={e => { setTipoFiltro(e.target.value as TipoFiltro); setValorFiltro(""); }}>
           {tiposFiltro.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
         </select>
         <select className="border p-2 rounded-md" value={valorFiltro} onChange={e => setValorFiltro(e.target.value)}>
           <option value="">Todos</option>
-          {techsPorTipo.map(t => <option key={t.nombre} value={t.nombre}>{t.nombre}</option>)}
+          {techsPorTipo.map(t => <option key={t._id} value={t.nombre}>{t.nombre}</option>)}
         </select>
       </div>
+      
       {proyectosFiltrados.length === 0 ? (
         <div className="text-gray-500 py-8 text-center">No hay proyectos para este filtro.</div>
       ) : (
@@ -127,7 +92,12 @@ export default function ProjectList() {
                 </div>
                 <div className="flex gap-2">
                   <button className="text-indigo-600 hover:underline text-sm">Editar</button>
-                  <button className="text-red-500 hover:underline text-sm">Eliminar</button>
+                  <button 
+                    className="text-red-500 hover:underline text-sm"
+                    onClick={() => handleDeleteProject(p._id!)}
+                  >
+                    Eliminar
+                  </button>
                 </div>
               </div>
               <div className="mt-2 text-xs text-gray-500">
@@ -138,6 +108,7 @@ export default function ProjectList() {
                 Herramientas: {(p.herramientas || []).join(", ")}
               </div>
               {p.imagen && <img src={p.imagen} alt={p.nombre} className="mt-2 max-w-xs rounded-md" />}
+              
               {p.links && (
                 <div className="mt-2 text-xs">
                   {p.links.demo && <a href={p.links.demo} className="text-blue-600 underline mr-2" target="_blank">Demo</a>}

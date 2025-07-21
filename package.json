@@ -1,5 +1,5 @@
 {
-  "name": "desktop",
+  "name": "PortafolioFelipe",
   "version": "1.0.0",
   "private": true,
   "main": "packages/main/dist/index.js",
@@ -11,9 +11,58 @@
     "dev:main": "cd packages/main && npm run dev",
     "dev:preload": "cd packages/preload && npm run dev",
     "dev:renderer": "cd packages/renderer && npx vite",
-    "start": "electron ."
+    "start": "electron .",
+    "build": "npm run build:main && npm run build:preload && npm run build:renderer",
+    "build:main": "cd packages/main && npm run build",
+    "build:preload": "cd packages/preload && npm run build",
+    "build:renderer": "cd packages/renderer && npm run build",
+    "clean": "rimraf dist",
+    "dist": "npm run clean && npm run build && electron-builder"
   },
   "devDependencies": {
-    "concurrently": "^8.2.0"
+    "concurrently": "^8.2.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.tuempresa.tuapp",
+    "productName": "PortafolioFelipe",
+    "files": [
+      "build/license.txt",
+      "build/installer.nsh",
+      "packages/main/dist/**",
+      "packages/preload/dist/**",
+      "packages/renderer/dist/**",
+      "build/**",
+      "!node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!**/.*",
+      "!**/test{,s}/**",
+      "!**/*.map"
+    ],
+    "directories": {
+      "buildResources": "build"
+    },
+    "extraMetadata": {
+      "main": "packages/main/dist/index.js"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage"
+    },
+    "nsis": {
+      "oneClick": false,
+      "language": "3082",
+      "allowElevation": true,
+      "include": "build/installer.nsh",
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "license": "build/license.txt",
+      "perMachine": true
+    }
   }
 }

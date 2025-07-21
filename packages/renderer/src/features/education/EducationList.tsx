@@ -1,64 +1,64 @@
-import { useState } from "react";
-import FormSection from "../../components/ui/FormSection";
+import { useEducation } from '../hooks/useEducation';
+import FormSection from '../../components/ui/FormSection';
+import ErrorMessage from '../../components/ui/ErrorMessage';
+import SuccessMessage from '../../components/ui/SuccessMessage';
+import type { Education } from '../../types/education.types';
 
-const initialEducations = [
-  {
-    _id: "1",
-    titulo: "Desarrollo Web Full Stack",
-    institucion: "Universidad del Desarrollo",
-    estado: "En curso",
-    fecha_inicio: "2023-11",
-    fecha_fin: "2024-08",
-    descripcion: "Programa intensivo enfocado en el desarrollo frontend y backend con proyectos reales.",
-    aprendizajes: [
-      "Programación con JavaScript y TypeScript",
-      "Frameworks modernos como React y Node.js",
-      "Metodologías ágiles y trabajo colaborativo",
-      "Despliegue continuo en Vercel y Firebase"
-    ],
-    certificado_url: null,
-    links_relevantes: [
-      {
-        titulo: "Proyecto final",
-        url: "https://portafolio-front-tau.vercel.app"
-      }
-    ]
-  },
-  {
-    _id: "2",
-    titulo: "Certificación Scrum Master",
-    institucion: "Scrum.org",
-    estado: "Completado",
-    fecha_inicio: "2022-01",
-    fecha_fin: "2022-03",
-    descripcion: "Certificación internacional en metodologías ágiles Scrum.",
-    aprendizajes: ["Scrum", "Gestión de equipos", "Sprints", "Product Owner"],
-    certificado_url: "https://certificados.com/scrum-master.png",
-    links_relevantes: []
-  }
-];
+interface EducationListProps {
+  onEdit: (education: Education) => void;
+}
 
-export default function EducationList() {
-  const [educations, setEducations] = useState(initialEducations);
+const tipoLabel = (tipo: string) => {
+  return tipo === 'formacion' ? '🎓 ' : '🏆 ';
+};
 
-  const handleDelete = (id: string) => {
-    if (window.confirm("¿Seguro que deseas eliminar esta formación?")) {
-      setEducations(educations.filter(e => e._id !== id));
+export function EducationList({ onEdit }: EducationListProps) {
+  const { 
+    educations, 
+    loading, 
+    error, 
+    successMessage, 
+    delete: deleteEducation, 
+    clearMessages
+  } = useEducation();
+
+  const handleEdit = (education: Education) => {
+    onEdit(education);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar esta educación?')) {
+      await deleteEducation(id);
     }
   };
 
-  const handleEdit = (id: string) => {
-    alert("Funcionalidad mock: aquí se abriría el formulario de edición para la formación con id " + id);
-  };
+  if (loading) {
+    return <div className="text-center py-8">Cargando educación...</div>;
+  }
 
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-bold">Formación académica y certificaciones</h2>
+      
+      {error && (
+        <ErrorMessage 
+          message={error} 
+          onDismiss={clearMessages}
+        />
+      )}
+      
+      {successMessage && (
+        <SuccessMessage 
+          message={successMessage} 
+          onDismiss={clearMessages}
+        />
+      )}
+      
       {educations.length === 0 ? (
         <div className="text-gray-500 py-8 text-center">No hay formaciones registradas.</div>
       ) : (
         educations.map(edu => (
-          <FormSection key={edu._id} title={edu.titulo}>
+          <FormSection key={edu._id} title={<>{tipoLabel(edu.tipo)}{edu.titulo}</>}>
             <div className="flex justify-between items-center mb-2">
               <div className="text-sm text-gray-700">
                 <span className="font-semibold">Institución:</span> {edu.institucion}<br/>
@@ -66,8 +66,18 @@ export default function EducationList() {
                 <span className="font-semibold">Fechas:</span> {edu.fecha_inicio} - {edu.estado === "En curso" ? "Actualidad" : edu.fecha_fin}
               </div>
               <div className="flex gap-2">
-                <button onClick={() => handleEdit(edu._id)} className="text-indigo-600 hover:underline text-sm">Editar</button>
-                <button onClick={() => handleDelete(edu._id)} className="text-red-500 hover:underline text-sm">Eliminar</button>
+                <button 
+                  onClick={() => handleEdit(edu)} 
+                  className="text-indigo-600 hover:underline text-sm"
+                >
+                  Editar
+                </button>
+                <button 
+                  onClick={() => handleDelete(edu._id!)} 
+                  className="text-red-500 hover:underline text-sm"
+                >
+                  Eliminar
+                </button>
               </div>
             </div>
             {edu.descripcion && <div className="mb-2 text-gray-600">{edu.descripcion}</div>}

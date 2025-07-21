@@ -19,8 +19,6 @@ interface Proyecto {
 
 export default function ProjectsEditor() {
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
-  const [nuevaTecnologia, setNuevaTecnologia] = useState("");
-  const [editandoIndex, setEditandoIndex] = useState<number | null>(null);
 
   const agregarProyecto = () => {
     setProyectos(prev => [
@@ -38,10 +36,14 @@ export default function ProjectsEditor() {
     setProyectos(prev => prev.filter((_, i) => i !== index));
   };
 
-  const actualizarCampo = (index: number, campo: keyof Proyecto, valor: string) => {
+  const actualizarCampo = (index: number, campo: keyof Proyecto, valor: string | string[]) => {
     setProyectos(prev => {
       const copia = [...prev];
-      (copia[index][campo] as any) = valor;
+      if (campo === "tecnologias") {
+        copia[index][campo] = valor as string[];
+      } else {
+        (copia[index][campo] as any) = valor;
+      }
       return copia;
     });
   };
@@ -50,14 +52,6 @@ export default function ProjectsEditor() {
     setProyectos(prev => {
       const copia = [...prev];
       copia[index].links = { ...copia[index].links, [linkName]: valor };
-      return copia;
-    });
-  };
-
-  const eliminarTecnologia = (index: number, tech: string) => {
-    setProyectos(prev => {
-      const copia = [...prev];
-      copia[index].tecnologias = copia[index].tecnologias.filter(t => t !== tech);
       return copia;
     });
   };
@@ -154,18 +148,10 @@ const eliminarOtroLink = (idxProyecto: number, idxLink: number) => {
           />
 
           <TagInput
-            tags={proyecto.tecnologias}
-            onAdd={(tag) => {
-              const copia = [...proyectos];
-              copia[idx].tecnologias.push(tag);
-              setProyectos(copia);
-            }}
-            onRemove={(tag) => eliminarTecnologia(idx, tag)}
-            inputValue={editandoIndex === idx ? nuevaTecnologia : ""}
-            setInputValue={(val) => {
-              setEditandoIndex(idx);
-              setNuevaTecnologia(val);
-            }}
+            label="Tecnologías"
+            value={proyecto.tecnologias}
+            onChange={nuevasTecnos => actualizarCampo(idx, "tecnologias", nuevasTecnos)}
+            suggestions={[]}
             placeholder="Ej: React, MongoDB, Tailwind"
           />
 

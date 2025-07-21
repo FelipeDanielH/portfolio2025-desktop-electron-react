@@ -1,0 +1,7 @@
+PortafolioFelipe - Licencia de uso
+
+Copyright (c) 2024 Felipe
+
+Este software se proporciona "tal cual", sin garantía de ningún tipo, expresa o implícita, incluyendo pero no limitado a las garantías de comerciabilidad, idoneidad para un propósito particular y no infracción.
+
+Al instalar este software, aceptas los términos y condiciones aquí descritos. 

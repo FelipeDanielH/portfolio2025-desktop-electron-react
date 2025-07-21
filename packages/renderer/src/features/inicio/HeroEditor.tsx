@@ -14,7 +14,11 @@ export default function HeroEditor() {
   useEffect(() => {
     window.electronAPI.getHero().then((data) => {
       if (data) {
-        setHero(data);
+        setHero({
+          title: data.titulo,
+          subtitle: data.claim,
+          description: data.claim || ''
+        });
       }
     });
   }, []);
